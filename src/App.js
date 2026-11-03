@@ -1,23 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import Sidebar from "./Sidebar";
+import TopMenuBar from "./TopMenuBar";
+import AbsenceTable from "./AbsenceTable";
 
 function App() {
+  const [active, setActive] = useState("Dashboard");
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ display: "flex", fontFamily: "sans-serif" }}>
+      <Sidebar active={active} setActive={setActive} />
+      <div style={{ flex: 1, background: "#f9fafb", minHeight: "100vh" }}>
+        <TopMenuBar />
+        <main style={{ padding: 24 }}>
+          {active === "Dashboard" ? (
+            <AbsenceTable />
+          ) : (
+            <p style={{ color: "#888" }}>Nothing to display</p>
+          )}
+        </main>
+      </div>
     </div>
   );
 }
