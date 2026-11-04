@@ -13,19 +13,15 @@ const columns = [
   { key: "companyName", label: "Company" },
   { key: "companyType", label: "Type" },
   { key: "tokenSymbol", label: "Symbol" },
-  { key: "contractAddress", label: "Contract address", format: short },
-  { key: "sharesOnSale", label: "Shares on sale" },
-  { key: "ownerShares", label: "Owner shares" },
-  { key: "pricePerShare", label: "Price per share", format: rupees },
-  { key: "txHash", label: "Tx hash", format: short },
-  { key: "block", label: "Block" },
-  { key: "gasUsed", label: "Gas used" },
-  { key: "gasCostEth", label: "Gas cost (ETH)" },
+  { key: "contractAddress", label: "Contract", format: short },
+  { key: "sharesOnSale", label: "On sale" },
+  { key: "ownerShares", label: "Owner" },
+  { key: "pricePerShare", label: "Price / share", format: rupees },
   { key: "status", label: "Status" },
 ];
 
-function TokenTable() {
-  const [rows, setRows] = useState([]); // in memory only; gone on page refresh
+function TokenTable({ rows, setRows }) {
+
   const [showAdd, setShowAdd] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [page, setPage] = useState(1);
@@ -110,9 +106,9 @@ const styles = {
   plusBtn: { display: "flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, background: "#0b66ff", color: "#fff", border: "none", borderRadius: 10, cursor: "pointer" },
   table: { width: "100%", borderCollapse: "collapse", fontSize: 13 },
   headRow: { background: "#f5f6f8" },
-  th: { textAlign: "left", padding: "12px 10px", fontSize: 12, fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: 0.4, whiteSpace: "nowrap" },
+    th: { textAlign: "left", padding: "12px 10px", fontSize: 12, fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: 0.4 },
+  td: { padding: "12px 10px", borderBottom: "1px solid #f0f0f0", color: "#222" },
   row: { cursor: "pointer" },
-  td: { padding: "12px 10px", borderBottom: "1px solid #f0f0f0", color: "#222", whiteSpace: "nowrap" },
   status: { display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 500, color: "#15803d" },
   empty: { padding: 32, textAlign: "center", color: "#888" },
 };

@@ -32,7 +32,6 @@ const restFields = [
   { name: "tokenName", label: "Token name", placeholder: "Green Villa Shares", required: true, rules: "Mandatory; can't be empty." },
   { name: "tokenSymbol", label: "Token symbol", placeholder: "GVS", required: true, rules: "Mandatory; 3–5 capital letters, must be unique." },
   { name: "companyId", label: "Company ID", placeholder: "COMP-SAMPLE-001", required: true, rules: "Mandatory; can't be empty, must be unique." },
-  { name: "offeringId", label: "Offering ID", placeholder: "OFFER-SAMPLE-001", required: true, rules: "Mandatory; can't be empty, must be unique." },
   { name: "treasuryWallet", label: "Treasury wallet", kind: "select", placeholder: "Select treasury wallet", required: true, rules: "Mandatory; only the treasury wallet.", options: walletsFor("treasury") },
   { name: "ownerWallet", label: "Owner wallet", kind: "select", placeholder: "Select owner wallet", required: true, rules: "Mandatory; only owner wallets.", options: walletsFor("owner") },
   { name: "platformWallet", label: "Platform wallet", kind: "select", placeholder: "Select platform wallet", required: true, rules: "Mandatory; only the platform wallet.", options: walletsFor("platform") },
@@ -57,7 +56,6 @@ function fillFromSeed(c) {
     tokenName: c.token.name,
     tokenSymbol: c.token.symbol,
     companyId: c.id,
-    offeringId: c.offering.id,
     treasuryWallet: walletAddress(c.treasuryWalletId),
     ownerWallet: walletAddress(c.ownerWalletId),
     platformWallet: walletAddress(c.platformWalletId),
@@ -96,8 +94,6 @@ function validate(form, hasAsset, existing) {
   if (isEmpty(form.companyId)) e.companyId = "Company ID is required";
   else if (existing.companyId.includes(form.companyId.trim())) e.companyId = "Company ID already exists";
 
-  if (isEmpty(form.offeringId)) e.offeringId = "Offering ID is required";
-  else if (existing.offeringId.includes(form.offeringId.trim())) e.offeringId = "Offering ID already exists";
 
   if (!form.treasuryWallet) e.treasuryWallet = "Select treasury wallet";
   if (!form.ownerWallet) e.ownerWallet = "Select owner wallet";
@@ -122,7 +118,6 @@ function AddTokenModal({ onClose, onSave, existingRows = [] }) {
   const existing = {
     tokenSymbol: existingRows.map((r) => r.tokenSymbol),
     companyId: existingRows.map((r) => r.companyId),
-    offeringId: existingRows.map((r) => r.offeringId),
     assetId: existingRows.map((r) => r.assetId).filter(Boolean),
   };
 

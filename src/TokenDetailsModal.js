@@ -8,7 +8,6 @@ function TokenDetailsModal({ row, onClose }) {
     ["Asset", row.assetId ? `${row.assetName} (${row.assetType}, ${row.assetId})` : "-"],
     ["Valuation (₹)", rupees(row.valuation)],
     ["Valuation date", row.valuationDate],
-    ["Offering ID", row.offeringId],
     ["Token name", row.tokenName],
     ["Token symbol", row.tokenSymbol],
     ["Contract address", row.contractAddress],

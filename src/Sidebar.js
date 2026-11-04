@@ -6,10 +6,10 @@ import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 
 const menus = [
   { name: "Dashboard", icon: GridViewOutlinedIcon },
-  { name: "Tracking", icon: LocalShippingOutlinedIcon },
-  { name: "Transactions", icon: SwapHorizOutlinedIcon },
-  { name: "Reports", icon: AssessmentOutlinedIcon },
-  { name: "Invoice", icon: ReceiptOutlinedIcon },
+  { name: "Blocks", icon: LocalShippingOutlinedIcon },
+  { name: "Smart Contracts", icon: SwapHorizOutlinedIcon },
+//   { name: "Reports", icon: AssessmentOutlinedIcon },
+//   { name: "Invoice", icon: ReceiptOutlinedIcon },
 ];
 
 function BlockchainLogo() {
