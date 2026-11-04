@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Sidebar from "./Sidebar";
 import TopMenuBar from "./TopMenuBar";
-import AbsenceTable from "./AbsenceTable";
+import TokenTable from "./TokenTable";
 
 function App() {
   const [active, setActive] = useState("Dashboard");
@@ -13,7 +13,7 @@ function App() {
         <TopMenuBar />
         <main style={{ padding: 24 }}>
           {active === "Dashboard" ? (
-            <AbsenceTable />
+            <TokenTable />
           ) : (
             <p style={{ color: "#888" }}>Nothing to display</p>
           )}

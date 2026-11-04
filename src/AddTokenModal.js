@@ -1,22 +1,15 @@
 import { useState } from "react";
 import TextField from "./TextField";
 import Dropdown from "./Dropdown";
+import { seedCompanies, seedWallets } from "./chain/seed";
 
-// Seed data (later from API)
-const seedWallets = [
-  { role: "treasury", value: "0x7099…79C8", label: "#1 Treasury – 0x7099…79C8" },
-  { role: "owner", value: "0x3C44…93BC", label: "#2 Company owner – 0x3C44…93BC" },
-  { role: "platform", value: "0x90F7…b906", label: "#3 Platform – 0x90F7…b906" },
-];
-const walletsFor = (role) => seedWallets.filter((w) => w.role === role);
-
-// Fake existing values for the "unique" check (later from API)
-const existing = {
-  tokenSymbol: ["ABC"],
-  companyId: ["COMP-001"],
-  offeringId: ["OFFER-001"],
-  assetId: ["ASSET-001"],
-};
+const roleLabels = { treasury: "Treasury", owner: "Company owner", platform: "Platform" };
+const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const walletsFor = (role) =>
+  seedWallets
+    .filter((w) => w.role === role)
+    .map((w) => ({ value: w.address, label: `#${w.accountIndex} ${roleLabels[role]} – ${short(w.address)}` }));
+const walletAddress = (walletId) => seedWallets.find((w) => w.id === walletId)?.address ?? "";
 
 const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
 
@@ -46,11 +39,33 @@ const restFields = [
   { name: "sharesOnSale", label: "Shares on sale", type: "number", step: 100, placeholder: "5000", required: true, rules: "Mandatory; whole number 100–9,900, in steps of 100." },
 ];
 
-const emptyForm = Object.fromEntries(
-  [...topFields, ...assetFields, ...restFields].map((f) => [f.name, ""])
-);
+const emptyForm = Object.fromEntries([...topFields, ...assetFields, ...restFields].map((f) => [f.name, ""]));
 
-function validate(form, hasAsset) {
+const autofillOptions = seedCompanies.map((c) => ({ value: c.id, label: `${c.name} (${c.token.symbol})` }));
+
+// Fills the form from one seed company (the modal has one asset row, so only the first asset is used).
+function fillFromSeed(c) {
+  const asset = c.assets[0];
+  return {
+    companyName: c.name,
+    companyType: c.type,
+    assetId: asset?.id ?? "",
+    assetName: asset?.name ?? "",
+    assetType: asset?.type ?? "",
+    valuation: String(c.valuation.amountInr),
+    valuationDate: c.valuation.asOf,
+    tokenName: c.token.name,
+    tokenSymbol: c.token.symbol,
+    companyId: c.id,
+    offeringId: c.offering.id,
+    treasuryWallet: walletAddress(c.treasuryWalletId),
+    ownerWallet: walletAddress(c.ownerWalletId),
+    platformWallet: walletAddress(c.platformWalletId),
+    sharesOnSale: String(c.offering.sharesOnSale),
+  };
+}
+
+function validate(form, hasAsset, existing) {
   const e = {};
   const isEmpty = (v) => !String(v).trim();
   const isWhole = (v) => /^\d+$/.test(String(v));
@@ -96,23 +111,51 @@ function validate(form, hasAsset) {
   return e;
 }
 
-function AddTokenModal({ onClose }) {
+function AddTokenModal({ onClose, onSave, existingRows = [] }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [hasAsset, setHasAsset] = useState(false);
+  const [autofill, setAutofill] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const existing = {
+    tokenSymbol: existingRows.map((r) => r.tokenSymbol),
+    companyId: existingRows.map((r) => r.companyId),
+    offeringId: existingRows.map((r) => r.offeringId),
+    assetId: existingRows.map((r) => r.assetId).filter(Boolean),
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-    setErrors({ ...errors, [name]: "" });
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = () => {
-    const errs = validate(form, hasAsset);
+  const handleAutofill = (e) => {
+    const company = seedCompanies.find((c) => c.id === e.target.value);
+    setAutofill(e.target.value);
+    if (!company) return;
+    setForm(fillFromSeed(company));
+    setHasAsset(company.assets.length > 0);
+    setErrors({});
+    setSubmitError("");
+  };
+
+  const handleSubmit = async () => {
+    const errs = validate(form, hasAsset, existing);
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      console.log("Submitted:", form);
+    if (Object.keys(errs).length > 0) return;
+
+    setSaving(true);
+    setSubmitError("");
+    try {
+      await onSave(form, hasAsset);
       onClose();
+    } catch (err) {
+      setSubmitError(err?.shortMessage || err?.reason || err?.message || "Deploy failed");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -136,14 +179,25 @@ function AddTokenModal({ onClose }) {
   };
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
+    <div style={styles.overlay} onClick={saving ? undefined : onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <h3 style={styles.title}>Add Token</h3>
+        <h3 style={styles.title}>Add company token</h3>
 
         <div style={styles.grid}>
+          <div style={styles.fullRow}>
+            <Dropdown
+              label="Autofill from sample data"
+              name="autofill"
+              value={autofill}
+              onChange={handleAutofill}
+              placeholder="Select a sample company"
+              options={autofillOptions}
+              rules="Optional; fills every field from the seed sample (first asset only)."
+            />
+          </div>
+
           {topFields.map(renderField)}
 
-          {/* Asset row */}
           <div style={styles.fullRow}>
             <button style={styles.linkBtn} onClick={() => setHasAsset(!hasAsset)}>
               {hasAsset ? "− Remove asset" : "+ Add asset"}
@@ -154,9 +208,13 @@ function AddTokenModal({ onClose }) {
           {restFields.map(renderField)}
         </div>
 
+        {submitError && <div style={styles.errorBox}>{submitError}</div>}
+
         <div style={styles.footer}>
-          <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
-          <button style={styles.submitBtn} onClick={handleSubmit}>Create</button>
+          <button style={styles.cancelBtn} onClick={onClose} disabled={saving}>Cancel</button>
+          <button style={{ ...styles.submitBtn, opacity: saving ? 0.7 : 1 }} onClick={handleSubmit} disabled={saving}>
+            {saving ? "Deploying…" : "Create"}
+          </button>
         </div>
       </div>
     </div>
@@ -170,6 +228,7 @@ const styles = {
   grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
   fullRow: { gridColumn: "1 / -1" },
   linkBtn: { background: "none", border: "none", color: "#2563eb", fontWeight: 600, fontSize: 14, cursor: "pointer", padding: 0 },
+  errorBox: { marginTop: 16, padding: "10px 12px", background: "#fef2f2", color: "#991b1b", borderRadius: 8, fontSize: 13, wordBreak: "break-word" },
   footer: { display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 },
   cancelBtn: { padding: "10px 18px", border: "1px solid #ddd", background: "#fff", borderRadius: 8, cursor: "pointer", fontSize: 14 },
   submitBtn: { padding: "10px 18px", border: "none", background: "#0b66ff", color: "#fff", borderRadius: 8, cursor: "pointer", fontSize: 14, fontWeight: 600 },
